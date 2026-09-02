@@ -1,0 +1,22 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useSimulationStore } from '../../store/simulationStore';
+import { STAGE_DEFINITIONS, TOTAL_DURATION } from '../../data/stageDefinitions';
+function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+export function SimulationController() {
+    const playing = useSimulationStore((s) => s.playing);
+    const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds);
+    const stageIndex = useSimulationStore((s) => s.stageIndex);
+    const start = useSimulationStore((s) => s.start);
+    const pause = useSimulationStore((s) => s.pause);
+    const restart = useSimulationStore((s) => s.restart);
+    const nextStage = useSimulationStore((s) => s.nextStage);
+    const prevStage = useSimulationStore((s) => s.prevStage);
+    const progress = (elapsedSeconds / TOTAL_DURATION) * 100;
+    const isFinished = elapsedSeconds >= TOTAL_DURATION;
+    const currentStage = STAGE_DEFINITIONS[stageIndex];
+    return (_jsxs("div", { className: "sim-controller", id: "sim-controller", children: [_jsxs("div", { className: "glass-panel sim-stage-info", style: { width: '100%' }, children: [_jsxs("span", { className: "sim-stage-badge", children: ["STAGE ", stageIndex + 1, " / ", STAGE_DEFINITIONS.length] }), _jsx("span", { className: "sim-stage-name", children: currentStage.name }), _jsx("div", { style: { flex: 1 } }), _jsx("div", { className: "sim-progress-track", style: { width: 120 }, children: _jsx("div", { className: "sim-progress-fill", style: { width: `${Math.min(progress, 100).toFixed(1)}%` } }) })] }), _jsxs("div", { className: "sim-controls-row glass-panel", children: [_jsx("span", { className: "sim-clock", children: formatTime(elapsedSeconds) }), _jsxs("span", { style: { fontSize: 11, color: 'var(--color-text-muted)', marginRight: 4 }, children: ["/ ", formatTime(TOTAL_DURATION)] }), _jsx("div", { className: "sim-divider" }), _jsx("button", { id: "btn-prev-stage", className: "sim-btn sim-btn-secondary", onClick: prevStage, disabled: stageIndex === 0 && elapsedSeconds === 0, title: "Jump to previous stage", children: "\u23EE PREV" }), playing ? (_jsx("button", { id: "btn-pause", className: "sim-btn sim-btn-primary", onClick: pause, children: "\u23F8 PAUSE" })) : (_jsx("button", { id: "btn-start", className: "sim-btn sim-btn-primary", onClick: start, disabled: isFinished, children: isFinished ? '✓ COMPLETE' : elapsedSeconds === 0 ? '▶ START' : '▶ RESUME' })), _jsx("button", { id: "btn-next-stage", className: "sim-btn sim-btn-secondary", onClick: nextStage, disabled: stageIndex >= STAGE_DEFINITIONS.length - 1, title: "Skip immediately to next stage", children: "NEXT \u23ED" }), _jsx("div", { className: "sim-divider" }), _jsx("button", { id: "btn-restart", className: "sim-btn sim-btn-danger", onClick: restart, children: "\u21BA RESTART" })] })] }));
+}

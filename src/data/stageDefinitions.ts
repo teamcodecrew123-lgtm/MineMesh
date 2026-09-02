@@ -1,0 +1,184 @@
+// 6-stage deterministic lifecycle — exact 60 seconds
+// Represents the complete evolving mining subsidence event
+
+export interface SensorReadings {
+  vibration: number     // mm/s
+  tilt: number          // μrad
+  strain: number        // με
+  seismic: number       // events/hour
+  gas: number           // %
+  gnssDisplacement: number // mm (vertical ground movement)
+  riskPercent: number   // 0–100%
+}
+
+export interface StageDefinition {
+  id: number
+  name: string
+  shortName: string
+  startTime: number     // seconds from start
+  endTime: number       // seconds
+  alertMessage: string
+  alertSeverity: 'normal' | 'warning' | 'high-risk' | 'critical'
+  readings: SensorReadings
+  insarStatus: string
+  miningFrontProgress: number   // 0–1
+  terrainDeformation: number    // 0–1
+  showFusionPanel: boolean
+  seismicCluster: boolean
+}
+
+export const STAGE_DEFINITIONS: StageDefinition[] = [
+  {
+    id: 0,
+    name: 'Stable Mine',
+    shortName: 'STABLE',
+    startTime: 0,
+    endTime: 10,
+    alertMessage: 'STAGE 1: SYSTEM NORMAL — All 5 monitoring nodes at baseline',
+    alertSeverity: 'normal',
+    readings: {
+      vibration: 1.2,
+      tilt: 0.2,
+      strain: 20,
+      seismic: 2,
+      gas: 0.8,
+      gnssDisplacement: -0.5,
+      riskPercent: 8,
+    },
+    insarStatus: 'Stable Baseline',
+    miningFrontProgress: 0.0,
+    terrainDeformation: 0.0,
+    showFusionPanel: false,
+    seismicCluster: false,
+  },
+  {
+    id: 1,
+    name: 'Mining Starts',
+    shortName: 'MINING',
+    startTime: 10,
+    endTime: 20,
+    alertMessage: 'STAGE 2: MINING ACTIVITY DETECTED — Longwall shearer advancing',
+    alertSeverity: 'normal',
+    readings: {
+      vibration: 1.8,
+      tilt: 0.35,
+      strain: 26,
+      seismic: 4,
+      gas: 0.82,
+      gnssDisplacement: -0.8,
+      riskPercent: 20,
+    },
+    insarStatus: 'Stable / Initial Scan',
+    miningFrontProgress: 0.28,
+    terrainDeformation: 0.0,
+    showFusionPanel: false,
+    seismicCluster: false,
+  },
+  {
+    id: 2,
+    name: 'Underground Stress Increase',
+    shortName: 'STRESS↑',
+    startTime: 20,
+    endTime: 30,
+    alertMessage: 'STAGE 3: UNDERGROUND STRESS INCREASING — Strata load redistribution',
+    alertSeverity: 'warning',
+    readings: {
+      vibration: 2.5,
+      tilt: 0.6,
+      strain: 38,
+      seismic: 7,
+      gas: 0.85,
+      gnssDisplacement: -1.2,
+      riskPercent: 35,
+    },
+    insarStatus: 'Minor Coherence Shift',
+    miningFrontProgress: 0.52,
+    terrainDeformation: 0.0,
+    showFusionPanel: false,
+    seismicCluster: false,
+  },
+  {
+    id: 3,
+    name: 'Anomaly Detected',
+    shortName: 'ANOMALY',
+    startTime: 30,
+    endTime: 40,
+    alertMessage: 'STAGE 4: CORRELATED SENSOR ANOMALY — Multi-node correlation confirmed',
+    alertSeverity: 'warning',
+    readings: {
+      vibration: 4.0,
+      tilt: 1.4,
+      strain: 72,
+      seismic: 18,
+      gas: 1.0,
+      gnssDisplacement: -3.4,
+      riskPercent: 55,
+    },
+    insarStatus: 'Early Fringe Distortion',
+    miningFrontProgress: 0.74,
+    terrainDeformation: 0.16,
+    showFusionPanel: false,
+    seismicCluster: true,
+  },
+  {
+    id: 4,
+    name: 'Surface Deformation',
+    shortName: 'DEFORM',
+    startTime: 40,
+    endTime: 50,
+    alertMessage: 'STAGE 5: GROUND DEFORMATION DETECTED — Active surface depression visible',
+    alertSeverity: 'high-risk',
+    readings: {
+      vibration: 4.8,
+      tilt: 2.0,
+      strain: 95,
+      seismic: 25,
+      gas: 1.1,
+      gnssDisplacement: -6.8,
+      riskPercent: 75,
+    },
+    insarStatus: 'Expanding Spatial Deformation Field',
+    miningFrontProgress: 0.88,
+    terrainDeformation: 0.64,
+    showFusionPanel: false,
+    seismicCluster: true,
+  },
+  {
+    id: 5,
+    name: 'Critical Subsidence',
+    shortName: 'CRITICAL',
+    startTime: 50,
+    endTime: 60,
+    alertMessage: 'STAGE 6: CRITICAL GROUND DEFORMATION ALERT — Immediate response required',
+    alertSeverity: 'critical',
+    readings: {
+      vibration: 6.2,
+      tilt: 3.2,
+      strain: 130,
+      seismic: 35,
+      gas: 1.2,
+      gnssDisplacement: -11.5,
+      riskPercent: 92,
+    },
+    insarStatus: 'High-Density Subsidence Field (Critical)',
+    miningFrontProgress: 1.0,
+    terrainDeformation: 1.0,
+    showFusionPanel: true,
+    seismicCluster: true,
+  },
+]
+
+export const TOTAL_DURATION = 60 // 60 seconds exact
+
+export function getStageAtTime(t: number): { stageIndex: number; progressInStage: number } {
+  const clamped = Math.max(0, Math.min(t, TOTAL_DURATION))
+  for (let i = STAGE_DEFINITIONS.length - 1; i >= 0; i--) {
+    const stage = STAGE_DEFINITIONS[i]
+    if (clamped >= stage.startTime) {
+      const duration = stage.endTime - stage.startTime
+      const progress = duration > 0 ? (clamped - stage.startTime) / duration : 0
+      return { stageIndex: i, progressInStage: Math.min(progress, 1) }
+    }
+  }
+  return { stageIndex: 0, progressInStage: 0 }
+}
