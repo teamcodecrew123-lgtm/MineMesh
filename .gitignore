@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+PROMPT.md
+ML_Pipeline_Mock_Data_Spec.md

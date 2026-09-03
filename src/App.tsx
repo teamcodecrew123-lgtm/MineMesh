@@ -8,6 +8,8 @@ import { TimeSeriesGraphModal } from './components/ui/TimeSeriesGraphModal'
 import { LayerControls } from './components/ui/LayerControls'
 import { ViewControls } from './components/ui/ViewControls'
 import { LiveDataNavbar } from './components/ui/LiveDataNavbar'
+import { MLPipelinePanel } from './components/ui/MLPipelinePanel'
+import { FusionGatePanel } from './components/ui/FusionGatePanel'
 import { useSimulationStore } from './store/simulationStore'
 import { STAGE_DEFINITIONS } from './data/stageDefinitions'
 
@@ -115,6 +117,13 @@ function App() {
 
       {/* 3. Time-Series Graph Modal */}
       <TimeSeriesGraphModal />
+
+      {/* ── ML Pipeline Panels ── */}
+      {/* 4. Live ML pipeline stage-by-stage output panel */}
+      <MLPipelinePanel />
+
+      {/* 5. Fusion AND-gate per-node status (visible from stage 2+) */}
+      <FusionGatePanel />
 
       {/* ── Critical Alert Flashing Red Perimeter in Final Stage ── */}
       {stageIndex >= 5 && <CriticalBorder />}

@@ -7,6 +7,7 @@ import {
   getSensorStatus,
 } from '../../data/sensorLayout'
 import { formatReading } from '../../data/interpolation'
+import { usePipelineData } from '../../hooks/usePipelineData'
 
 export function SensorInfoPanel() {
   const activePanel = useSimulationStore((s) => s.activePanel)
@@ -15,6 +16,7 @@ export function SensorInfoPanel() {
   const closePanel = useSimulationStore((s) => s.closePanel)
   const openSensorGraph = useSimulationStore((s) => s.openSensorGraph)
   const stageIndex = useSimulationStore((s) => s.stageIndex)
+  const { getRecord } = usePipelineData()
 
   if (activePanel !== 'node' || !selectedNodeId) return null
 
@@ -161,6 +163,64 @@ export function SensorInfoPanel() {
           )
         })}
       </div>
+
+      {/* ── ML Pipeline Section ── */}
+      {(() => {
+        const pipeRec = getRecord(node.id)
+        if (!pipeRec) return null
+        const ifo = pipeRec.isolation_forest
+        const fus = pipeRec.fusion
+        const xgb = pipeRec.xgboost
+        const scoreCol = ifo.anomaly_score < -0.10 ? '#dc2626' : ifo.anomaly_score < -0.04 ? '#f97316' : '#22c55e'
+        const riskCol = xgb.risk_class === 'Critical' ? '#dc2626' : xgb.risk_class === 'Warning' ? '#f97316' : xgb.risk_class === 'Watch' ? '#f59e0b' : '#22c55e'
+        return (
+          <div style={{ marginBottom: 10, borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 6, letterSpacing: '0.06em' }}>⚙ ML PIPELINE OUTPUT</div>
+
+            {/* Anomaly Score */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, color: '#64748b' }}>🔍 Anomaly Score <span style={{ fontSize: 9, color: '#94a3b8' }}>(↓ lower = worse)</span></span>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: scoreCol }}>
+                  {ifo.anomaly_score.toFixed(4)}
+                </span>
+                {ifo.if_flagged && (
+                  <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#d97706', fontWeight: 700 }}>FLAGGED</span>
+                )}
+              </div>
+            </div>
+
+            {/* Fusion Gate */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, color: '#64748b' }}>🔀 Fusion AND-Gate</span>
+              <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                <span style={{ fontSize: 9, color: fus.persistence_check ? '#22c55e' : '#94a3b8' }} title="Persistence gate">{fus.persistence_check ? '✓P' : '✗P'}</span>
+                <span style={{ fontSize: 9, color: fus.neighbor_agreement ? '#22c55e' : '#94a3b8' }} title="Neighbor agreement gate">{fus.neighbor_agreement ? '✓N' : '✗N'}</span>
+                <span style={{ fontSize: 9, color: fus.sensor_type_agreement ? '#22c55e' : '#94a3b8' }} title="Sensor-type agreement gate">{fus.sensor_type_agreement ? '✓S' : '✗S'}</span>
+                <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, fontWeight: 700,
+                  background: fus.fusion_flag ? 'rgba(220,38,38,0.12)' : 'rgba(71,85,105,0.10)',
+                  color: fus.fusion_flag ? '#dc2626' : '#64748b' }}>
+                  {fus.fusion_flag ? '● CONFIRMED' : '○ open'}
+                </span>
+              </div>
+            </div>
+
+            {/* XGBoost Risk Class */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 10, color: '#64748b' }}>🎯 XGBoost Risk</span>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                <div style={{ width: 60, height: 5, borderRadius: 3, background: 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+                  <div style={{ width: `${xgb.risk_percent}%`, height: '100%', background: riskCol, transition: 'width 0.6s ease' }} />
+                </div>
+                <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 700,
+                  background: `${riskCol}1a`, color: riskCol }}>
+                  {xgb.risk_class}
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── View Sensor Trends Button (Requirement 7 & 10) ── */}
       <button
