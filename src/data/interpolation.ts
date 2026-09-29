@@ -1,4 +1,4 @@
-import { SensorReadings, STAGE_DEFINITIONS } from './stageDefinitions'
+import { SensorReadings, StageDefinition, STAGE_DEFINITIONS } from './stageDefinitions'
 
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
@@ -9,9 +9,13 @@ export function smoothstep(t: number): number {
   return c * c * (3 - 2 * c)
 }
 
-export function interpolateReadings(stageIndex: number, progressInStage: number): SensorReadings {
-  const current = STAGE_DEFINITIONS[stageIndex]
-  const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)]
+export function interpolateReadings(
+  stageIndex: number,
+  progressInStage: number,
+  stages: StageDefinition[] = STAGE_DEFINITIONS,
+): SensorReadings {
+  const current = stages[stageIndex]
+  const next = stages[Math.min(stageIndex + 1, stages.length - 1)]
   const t = smoothstep(progressInStage)
 
   return {
@@ -25,15 +29,23 @@ export function interpolateReadings(stageIndex: number, progressInStage: number)
   }
 }
 
-export function interpolateMiningFront(stageIndex: number, progressInStage: number): number {
-  const current = STAGE_DEFINITIONS[stageIndex]
-  const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)]
+export function interpolateMiningFront(
+  stageIndex: number,
+  progressInStage: number,
+  stages: StageDefinition[] = STAGE_DEFINITIONS,
+): number {
+  const current = stages[stageIndex]
+  const next = stages[Math.min(stageIndex + 1, stages.length - 1)]
   return lerp(current.miningFrontProgress, next.miningFrontProgress, smoothstep(progressInStage))
 }
 
-export function interpolateTerrainDeformation(stageIndex: number, progressInStage: number): number {
-  const current = STAGE_DEFINITIONS[stageIndex]
-  const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)]
+export function interpolateTerrainDeformation(
+  stageIndex: number,
+  progressInStage: number,
+  stages: StageDefinition[] = STAGE_DEFINITIONS,
+): number {
+  const current = stages[stageIndex]
+  const next = stages[Math.min(stageIndex + 1, stages.length - 1)]
   return lerp(current.terrainDeformation, next.terrainDeformation, smoothstep(progressInStage))
 }
 

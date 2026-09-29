@@ -26,6 +26,8 @@ import {
   IsolationForestOutput,
 } from '../types/pipeline'
 
+// NOTE: KalmanOutput removed — Kalman stage is not in the live pipeline.
+
 // ── Node sensitivity profiles (mirrors sensorLayout.ts riskMultiplier) ──
 const NODE_PROFILES: Record<string, {
   riskMult: number      // 0–1, how much this node amplifies global risk
@@ -126,9 +128,9 @@ function generateFusion(
 }
 
 // ── GRU trend forecast ───────────────────────────────────────────────
+// 2-class output: 'stable' | 'slowing' — matches real trained GRU model.
 function generateTrend(prog: number, riskMult: number): TrendEnum {
   const p = prog * riskMult
-  if (p > 0.72) return 'accelerating'
   if (p > 0.38) return 'stable'
   return 'slowing'
 }
@@ -180,10 +182,9 @@ function generateGNSSDisplacement(
  * @param elapsedSeconds - Simulation time 0–60
  * @returns Array of 5 NodePipelineRecord (one per node)
  */
-export function generatePipelineData(elapsedSeconds: number): NodePipelineRecord[] {
+export function generatePipelineData(elapsedSeconds: number, scenarioId: string): NodePipelineRecord[] {
   const t = Math.round(elapsedSeconds)  // quantize to integer timestep
   const prog = globalProgress(elapsedSeconds)
-  const scenarioId = `scenario_0013`    // deterministic for demo
 
   const nodeIds = ['node-01', 'node-02', 'node-03', 'node-04', 'node-05']
 
@@ -203,16 +204,13 @@ export function generatePipelineData(elapsedSeconds: number): NodePipelineRecord
       node_id: nodeId,
       timestep: t,
       scenario_id: scenarioId,
+      x_pos_m: 0,
+      y_pos_m: 0,
 
       raw: {
         gnss_displacement_mm: gnssDisp,
         vibration_triggered: prog * riskMult > 0.30 || (n1 > 0.35 && prog > 0.15),
         piezo_amplitude: parseFloat((12 + prog * riskMult * 60 + n2 * 4).toFixed(1)),
-      },
-
-      kalman: {
-        // Kalman output is smoother than raw — less noisy
-        displacement_smoothed_mm: parseFloat((gnssDisp * 0.93 + noise(nodeId, t, 6) * 0.06).toFixed(2)),
       },
 
       isolation_forest: isoForest,

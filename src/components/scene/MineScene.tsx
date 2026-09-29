@@ -7,7 +7,7 @@ import { Terrain } from './Terrain'
 import { Underground } from './Underground'
 import { Sensors } from './Sensors'
 import { MicroseismicEvents } from './MicroseismicEvents'
-import { MONITORING_NODES, GNSS_STATIONS } from '../../data/sensorLayout'
+import { GNSS_STATIONS } from '../../data/sensorLayout'
 
 export function MineScene() {
   return (
@@ -28,6 +28,7 @@ function SceneContent() {
   const viewMode = useSimulationStore((s) => s.viewMode)
   const selectedNodeId = useSimulationStore((s) => s.selectedNodeId)
   const selectedGNSSId = useSimulationStore((s) => s.selectedGNSSId)
+  const heroNodes = useSimulationStore((s) => s.heroNodes)
   const cameraResetTrigger = useSimulationStore((s) => s.cameraResetTrigger)
   const tick = useSimulationStore((s) => s.tick)
   const stageIndex = useSimulationStore((s) => s.stageIndex)
@@ -45,7 +46,7 @@ function SceneContent() {
     const c = camera as THREE.PerspectiveCamera
 
     if (selectedNodeId) {
-      const node = MONITORING_NODES.find((n) => n.id === selectedNodeId)
+      const node = heroNodes.find((n) => n.id === selectedNodeId)
       if (node && controlsRef.current) {
         c.position.set(node.position.x + 8.5, node.position.y + 7.5, node.position.z + 8.5)
         controlsRef.current.target.set(node.position.x, node.position.y + 0.8, node.position.z)

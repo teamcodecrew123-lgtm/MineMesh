@@ -10,8 +10,15 @@ import { ViewControls } from './components/ui/ViewControls'
 import { LiveDataNavbar } from './components/ui/LiveDataNavbar'
 import { MLPipelinePanel } from './components/ui/MLPipelinePanel'
 import { FusionGatePanel } from './components/ui/FusionGatePanel'
+import { HeroNodesStatusBadge } from './components/ui/HeroNodesStatusBadge'
 import { useSimulationStore } from './store/simulationStore'
-import { STAGE_DEFINITIONS } from './data/stageDefinitions'
+import { useHeroNodes } from './hooks/useHeroNodes'
+
+/** Mounts once; fetches hero nodes on scenarioId change and stores them in Zustand. */
+function HeroNodesLoader() {
+  useHeroNodes()
+  return null
+}
 
 function App() {
   const stageIndex = useSimulationStore((s) => s.stageIndex)
@@ -19,7 +26,6 @@ function App() {
   const closeAllPanels = useSimulationStore((s) => s.closeAllPanels)
   const [layersOpen, setLayersOpen] = useState(true)
 
-  const currentStage = STAGE_DEFINITIONS[stageIndex]
   const riskPct = Math.round(readings.riskPercent)
 
   const riskStatus =
@@ -40,6 +46,9 @@ function App() {
 
   return (
     <div className="app-shell">
+      {/* Fetches hero nodes from backend on mount and on scenario change */}
+      <HeroNodesLoader />
+
       {/* ── 3D Canvas (Primary Interactive Digital Twin View) ── */}
       <div className="canvas-container">
         <MineScene />
@@ -101,6 +110,9 @@ function App() {
 
       {/* ── Bottom-Left: Live Sensor Telemetry Navbar ── */}
       <LiveDataNavbar />
+
+      {/* ── Hero node fetch status (loading / backend error) ── */}
+      <HeroNodesStatusBadge />
 
       {/* ── Bottom-Center: Simulation Timeline Controls ── */}
       <SimulationController />

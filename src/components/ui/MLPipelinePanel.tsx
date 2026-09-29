@@ -4,7 +4,7 @@
  * Displays the full 6-stage ML pipeline output for the selected node
  * (or a global overview when no node is selected).
  *
- * Shows: RAW → KALMAN → ISOLATION FOREST → FUSION → GRU → XGBOOST
+ * Shows: RAW → ISOLATION FOREST → FUSION → GRU → XGBOOST
  * Updates in real-time as the simulation progresses through stages.
  */
 
@@ -40,35 +40,31 @@ function anomalyColor(score: number): string {
 }
 
 function trendIcon(trend: string): string {
-  if (trend === 'accelerating') return '↗ accelerating'
-  if (trend === 'slowing')      return '↘ slowing'
+  if (trend === 'slowing') return '↘ slowing'
   return '→ stable'
 }
 
 function trendColor(trend: string): string {
-  if (trend === 'accelerating') return '#f97316'
-  if (trend === 'slowing')      return '#22c55e'
+  if (trend === 'slowing') return '#22c55e'
   return '#94a3b8'
 }
 
 // ── Stage header row ──────────────────────────────────────────────────
 const PIPELINE_STAGES = [
-  { id: 'raw',     label: 'RAW',    icon: '📡' },
-  { id: 'kalman',  label: 'KALMAN', icon: '〰' },
-  { id: 'if',      label: 'ISO-F',  icon: '🔍' },
-  { id: 'fusion',  label: 'FUSION', icon: '🔀' },
-  { id: 'gru',     label: 'GRU',    icon: '📈' },
-  { id: 'xgb',     label: 'XGB',    icon: '🎯' },
+  { id: 'raw',    label: 'RAW',    icon: '📡' },
+  { id: 'if',     label: 'ISO-F',  icon: '🔍' },
+  { id: 'fusion', label: 'FUSION', icon: '🔀' },
+  { id: 'gru',    label: 'GRU',    icon: '📈' },
+  { id: 'xgb',    label: 'XGB',    icon: '🎯' },
 ]
 
 function stageStatus(record: NodePipelineRecord, stageId: string): 'normal' | 'flagged' | 'warn' | 'critical' {
   const cls = record.xgboost.risk_class
   switch (stageId) {
     case 'raw':    return 'normal'
-    case 'kalman': return 'normal'
     case 'if':     return record.isolation_forest.if_flagged ? 'flagged' : 'normal'
     case 'fusion': return record.fusion.fusion_flag ? 'warn' : record.fusion.fusion_agreement_score > 0.4 ? 'flagged' : 'normal'
-    case 'gru':    return record.gru.trend === 'accelerating' ? 'warn' : 'normal'
+    case 'gru':    return 'normal'
     case 'xgb':    return cls === 'Critical' ? 'critical' : cls === 'Warning' ? 'warn' : cls === 'Watch' ? 'flagged' : 'normal'
     default:       return 'normal'
   }
@@ -182,15 +178,6 @@ export function MLPipelinePanel() {
               VIB: <b>{rec.raw.vibration_triggered ? 'TRIGGERED ⚡' : 'clear'}</b>
             </span>
             <span className="ml-val-chip">PIEZO: <b>{rec.raw.piezo_amplitude} u</b></span>
-          </div>
-        </div>
-
-        {/* KALMAN */}
-        <div className="ml-detail-row">
-          <div className="ml-detail-label">〰 KALMAN SMOOTH</div>
-          <div className="ml-detail-values">
-            <span className="ml-val-chip">smoothed: <b>{rec.kalman.displacement_smoothed_mm.toFixed(2)} mm</b></span>
-            <span className="ml-val-chip ml-chip-muted">noise reduced</span>
           </div>
         </div>
 

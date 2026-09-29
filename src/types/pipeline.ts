@@ -14,7 +14,8 @@
 export type RiskClass = 'Low' | 'Watch' | 'Warning' | 'Critical'
 
 // ── GRU trend prediction ────────────────────────────────────────────
-export type TrendEnum = 'accelerating' | 'stable' | 'slowing'
+// 2-class output matching the real trained GRU model (no 'accelerating' class).
+export type TrendEnum = 'stable' | 'slowing'
 
 // ── Stage 1: Raw sensor reading ─────────────────────────────────────
 export interface RawSensorData {
@@ -26,11 +27,10 @@ export interface RawSensorData {
   piezo_amplitude: number
 }
 
-// ── Stage 2: Kalman filter output ───────────────────────────────────
-export interface KalmanOutput {
-  /** Smoothed vertical displacement estimate (same units as raw, less noisy) */
-  displacement_smoothed_mm: number
-}
+// ── Stage 2: Kalman filter — REMOVED ────────────────────────────────
+// Kalman was evaluated and deferred: never validated on real sensor data.
+// KalmanOutput and the 'kalman' field on NodePipelineRecord have been removed.
+// The live pipeline goes: RAW → ISOLATION FOREST → FUSION → GRU → XGBOOST.
 
 // ── Stage 3: Isolation Forest output ────────────────────────────────
 export interface IsolationForestOutput {
@@ -46,35 +46,40 @@ export interface IsolationForestOutput {
 }
 
 // ── Stage 4: Rule-based fusion AND-gate ────────────────────────────
+//
+// MAPPING: real fusion system → UI display fields
+// ─────────────────────────────────────────────────────────────────────
+// The three boolean fields below are INFORMATIONAL / DISPLAY ONLY.
+// They do NOT gate fusion_flag — fusion_flag is passed through directly
+// from the real backend's fusion_confirmed value (score >= 3 of 4
+// signals). The booleans are approximations for the 3-chip UI only.
+//
+//   neighbor_agreement      = real spatial neighbor-agreement signal (1:1 match)
+//
+//   sensor_type_agreement   = true iff BOTH vibration AND piezo signals are
+//                             independently elevated; approximates "multiple
+//                             sensor types agree" — not a direct backend field
+//
+//   persistence_check       = RELABELING: maps to the real Isolation Forest
+//                             flagged signal, NOT literal persistence-over-time.
+//                             Name kept for UI label continuity only.
+//
+//   fusion_flag             = real fusion_confirmed (score >= 3 of 4 signals),
+//                             passed through directly. NOT computed as AND of
+//                             the three booleans above.
+//
+//   fusion_agreement_score  = real fusion_score / 4, normalised to [0, 1]
+// ─────────────────────────────────────────────────────────────────────
 export interface FusionOutput {
-  /**
-   * Gate 1 — Persistence check:
-   * Same node shows elevated anomaly score across multiple timesteps,
-   * not just a single noisy blip.
-   */
+  /** Display only — see mapping comment above. */
   persistence_check: boolean
-  /**
-   * Gate 2 — Neighbor agreement:
-   * Spatially adjacent nodes also show elevated anomaly scores —
-   * rules out single-sensor hardware fault.
-   */
+  /** 1:1 match with real spatial neighbor-agreement signal. */
   neighbor_agreement: boolean
-  /**
-   * Gate 3 — Sensor-type agreement:
-   * Multiple sensor types at/near this location agree
-   * (e.g. vibration/piezo corroborates GNSS anomaly).
-   */
+  /** Display only — see mapping comment above. */
   sensor_type_agreement: boolean
-  /**
-   * Weighted fraction of sub-checks that agree (0.0 – 1.0).
-   * Even when fusion_flag is false, this shows partial agreement.
-   */
+  /** real fusion_score / 4, normalised to [0, 1]. */
   fusion_agreement_score: number
-  /**
-   * TRUE only when ALL THREE gates pass (AND logic).
-   * Only then does the pipeline proceed to GRU/XGBoost.
-   * This is the most defensible engineered part of the system.
-   */
+  /** real fusion_confirmed (score >= 3 of 4 signals). NOT derived from the three booleans above. */
   fusion_flag: boolean
 }
 
@@ -111,9 +116,12 @@ export interface NodePipelineRecord {
   timestep: number
   /** Scenario identifier for the current simulation run */
   scenario_id: string
+  /** Real-world East position in metres, domain ±1183.4m centred at 0 */
+  x_pos_m: number
+  /** Real-world North position in metres, domain ±1183.4m centred at 0 */
+  y_pos_m: number
 
   raw: RawSensorData
-  kalman: KalmanOutput
   isolation_forest: IsolationForestOutput
   fusion: FusionOutput
   gru: GRUOutput

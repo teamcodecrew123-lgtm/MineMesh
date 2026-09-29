@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useState, useEffect } from 'react';
 import { useSimulationStore } from '../../store/simulationStore';
-import { MONITORING_NODES, GNSS_STATIONS, INTERNAL_SENSORS, getNodeTimeSeries, getGNSSTimeSeries, getNodeReadings, getGNSSReadings, } from '../../data/sensorLayout';
+import { GNSS_STATIONS, INTERNAL_SENSORS, getNodeTimeSeries, getGNSSTimeSeries, getNodeReadings, getGNSSReadings, } from '../../data/sensorLayout';
 import { formatReading } from '../../data/interpolation';
 export function TimeSeriesGraphModal() {
     const activePanel = useSimulationStore((s) => s.activePanel);
@@ -12,6 +12,7 @@ export function TimeSeriesGraphModal() {
     const closePanel = useSimulationStore((s) => s.closePanel);
     const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds);
     const readings = useSimulationStore((s) => s.readings);
+    const heroNodes = useSimulationStore((s) => s.heroNodes);
     const isNodeGraph = activePanel === 'sensorGraph' && !!selectedNodeId;
     const isGNSSGraph = activePanel === 'gnssGraph' && !!selectedGNSSId;
     const [gnssMode, setGnssMode] = useState('vertical');
@@ -26,7 +27,7 @@ export function TimeSeriesGraphModal() {
     }, [closePanel]);
     if (!isNodeGraph && !isGNSSGraph)
         return null;
-    const node = selectedNodeId ? MONITORING_NODES.find((n) => n.id === selectedNodeId) : null;
+    const node = selectedNodeId ? heroNodes.find((n) => n.id === selectedNodeId) : null;
     const gnss = selectedGNSSId ? GNSS_STATIONS.find((g) => g.id === selectedGNSSId) : null;
     const currentSensorKey = selectedGraphSensor || 'vibration';
     const activeSensorInfo = INTERNAL_SENSORS.find((s) => s.key === currentSensorKey);

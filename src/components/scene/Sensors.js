@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import { useSimulationStore } from '../../store/simulationStore';
-import { MONITORING_NODES, GNSS_STATIONS, getNodeReadings, getGNSSReadings, } from '../../data/sensorLayout';
+import { GNSS_STATIONS, getNodeReadings, getGNSSReadings, } from '../../data/sensorLayout';
 /**
  * Surface & Underground Monitoring Equipment:
  * 1. Underground Multi-Sensor Monitoring Nodes with Smooth Continuous Gradient Risk Heatmap (Yellow -> Orange -> Red)
@@ -17,8 +17,9 @@ export function Sensors() {
     const selectedGNSSId = useSimulationStore((s) => s.selectedGNSSId);
     const openNodePanel = useSimulationStore((s) => s.openNodePanel);
     const openGNSSPanel = useSimulationStore((s) => s.openGNSSPanel);
+    const heroNodes = useSimulationStore((s) => s.heroNodes);
     return (_jsxs("group", { children: [layers.nodes &&
-                MONITORING_NODES.map((node) => {
+                heroNodes.map((node) => {
                     const nodeReadings = getNodeReadings(node, readings);
                     const isSelected = selectedNodeId === node.id;
                     return (_jsx(UndergroundMonitoringNode, { node: node, riskPercent: nodeReadings.riskPercent, isSelected: isSelected, onSelect: () => openNodePanel(node.id) }, node.id));

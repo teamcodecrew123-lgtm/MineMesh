@@ -1,6 +1,5 @@
 import { useSimulationStore } from '../../store/simulationStore'
 import {
-  MONITORING_NODES,
   INTERNAL_SENSORS,
   getNodeReadings,
   getNodeStatus,
@@ -18,13 +17,26 @@ export function SensorInfoPanel() {
   const stageIndex = useSimulationStore((s) => s.stageIndex)
   const { getRecord } = usePipelineData()
 
+  const heroNodes = useSimulationStore((s) => s.heroNodes)
+
   if (activePanel !== 'node' || !selectedNodeId) return null
 
-  const node = MONITORING_NODES.find((n) => n.id === selectedNodeId)
+  const node = heroNodes.find((n) => n.id === selectedNodeId)
   if (!node) return null
 
   const nodeReadings = getNodeReadings(node, readings)
-  const overallStatus = getNodeStatus(nodeReadings)
+  const pipeRec = getRecord(node.id)
+
+  // NODE RISK: use real XGBoost output when available; fall back to scripted riskPercent.
+  const nodeRiskPct = pipeRec != null
+    ? Math.round(pipeRec.xgboost.risk_percent)
+    : nodeReadings.riskPercent
+
+  const overallStatus: 'normal' | 'warning' | 'critical' = pipeRec != null
+    ? (pipeRec.xgboost.risk_class === 'Critical' ? 'critical'
+      : pipeRec.xgboost.risk_class === 'Warning' || pipeRec.xgboost.risk_class === 'Watch' ? 'warning'
+      : 'normal')
+    : getNodeStatus(nodeReadings)
 
   const statusBadge = {
     normal: { text: 'NORMAL', cls: 'normal' },
@@ -76,14 +88,14 @@ export function SensorInfoPanel() {
               fontWeight: 800,
               fontFamily: 'JetBrains Mono, monospace',
               color:
-                nodeReadings.riskPercent >= 80
+                nodeRiskPct >= 80
                   ? '#dc2626'
-                  : nodeReadings.riskPercent >= 35
+                  : nodeRiskPct >= 35
                   ? '#d97706'
                   : '#10b981',
             }}
           >
-            {nodeReadings.riskPercent}%
+            {nodeRiskPct}%
           </div>
         </div>
         <span className={`sensor-status-badge ${statusBadge.cls}`}>{statusBadge.text}</span>
@@ -166,7 +178,6 @@ export function SensorInfoPanel() {
 
       {/* ── ML Pipeline Section ── */}
       {(() => {
-        const pipeRec = getRecord(node.id)
         if (!pipeRec) return null
         const ifo = pipeRec.isolation_forest
         const fus = pipeRec.fusion

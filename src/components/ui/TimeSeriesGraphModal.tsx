@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useSimulationStore } from '../../store/simulationStore'
 import {
-  MONITORING_NODES,
   GNSS_STATIONS,
   INTERNAL_SENSORS,
   getNodeTimeSeries,
@@ -21,6 +20,7 @@ export function TimeSeriesGraphModal() {
   const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds)
   const readings = useSimulationStore((s) => s.readings)
 
+  const heroNodes = useSimulationStore((s) => s.heroNodes)
   const isNodeGraph = activePanel === 'sensorGraph' && !!selectedNodeId
   const isGNSSGraph = activePanel === 'gnssGraph' && !!selectedGNSSId
 
@@ -37,7 +37,7 @@ export function TimeSeriesGraphModal() {
 
   if (!isNodeGraph && !isGNSSGraph) return null
 
-  const node = selectedNodeId ? MONITORING_NODES.find((n) => n.id === selectedNodeId) : null
+  const node = selectedNodeId ? heroNodes.find((n) => n.id === selectedNodeId) : null
   const gnss = selectedGNSSId ? GNSS_STATIONS.find((g) => g.id === selectedGNSSId) : null
 
   const currentSensorKey = selectedGraphSensor || 'vibration'

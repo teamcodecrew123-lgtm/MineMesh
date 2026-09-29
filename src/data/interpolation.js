@@ -6,9 +6,9 @@ export function smoothstep(t) {
     const c = Math.max(0, Math.min(1, t));
     return c * c * (3 - 2 * c);
 }
-export function interpolateReadings(stageIndex, progressInStage) {
-    const current = STAGE_DEFINITIONS[stageIndex];
-    const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)];
+export function interpolateReadings(stageIndex, progressInStage, stages = STAGE_DEFINITIONS) {
+    const current = stages[stageIndex];
+    const next = stages[Math.min(stageIndex + 1, stages.length - 1)];
     const t = smoothstep(progressInStage);
     return {
         vibration: lerp(current.readings.vibration, next.readings.vibration, t),
@@ -20,14 +20,14 @@ export function interpolateReadings(stageIndex, progressInStage) {
         riskPercent: lerp(current.readings.riskPercent, next.readings.riskPercent, t),
     };
 }
-export function interpolateMiningFront(stageIndex, progressInStage) {
-    const current = STAGE_DEFINITIONS[stageIndex];
-    const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)];
+export function interpolateMiningFront(stageIndex, progressInStage, stages = STAGE_DEFINITIONS) {
+    const current = stages[stageIndex];
+    const next = stages[Math.min(stageIndex + 1, stages.length - 1)];
     return lerp(current.miningFrontProgress, next.miningFrontProgress, smoothstep(progressInStage));
 }
-export function interpolateTerrainDeformation(stageIndex, progressInStage) {
-    const current = STAGE_DEFINITIONS[stageIndex];
-    const next = STAGE_DEFINITIONS[Math.min(stageIndex + 1, STAGE_DEFINITIONS.length - 1)];
+export function interpolateTerrainDeformation(stageIndex, progressInStage, stages = STAGE_DEFINITIONS) {
+    const current = stages[stageIndex];
+    const next = stages[Math.min(stageIndex + 1, stages.length - 1)];
     return lerp(current.terrainDeformation, next.terrainDeformation, smoothstep(progressInStage));
 }
 export function formatReading(key, value) {

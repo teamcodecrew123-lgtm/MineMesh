@@ -13,8 +13,8 @@ import { useSimulationStore } from '../store/simulationStore'
 import {
   fetchPipelineData,
   getNodeRecord,
-  clearPipelineCache,
 } from '../services/pipelineAdapter'
+import { mapDemoToBackendT } from '../data/stageDefinitions'
 import { NodePipelineRecord } from '../types/pipeline'
 
 export interface PipelineDataState {
@@ -33,26 +33,23 @@ export interface PipelineDataState {
 
 export function usePipelineData(): PipelineDataState {
   const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds)
+  const scenarioId = useSimulationStore((s) => s.scenarioId)
   const playing = useSimulationStore((s) => s.playing)
+
+  // Map demo time (0–60s) to real backend timestep (0–299) using per-scenario stage boundaries.
+  const backendT = mapDemoToBackendT(elapsedSeconds, scenarioId)
 
   const [records, setRecords] = useState<NodePipelineRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Clear cache when simulation restarts (elapsedSeconds resets to 0)
-  useEffect(() => {
-    if (elapsedSeconds === 0) {
-      clearPipelineCache()
-    }
-  }, [elapsedSeconds === 0])  // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Fetch data whenever elapsed time changes
+  // Fetch data whenever the mapped backend timestep or scenario changes.
   useEffect(() => {
     let cancelled = false
 
     const load = async () => {
       try {
-        const data = await fetchPipelineData(elapsedSeconds)
+        const data = await fetchPipelineData(backendT, scenarioId)
         if (!cancelled) {
           setRecords(data)
           setError(null)
@@ -66,12 +63,10 @@ export function usePipelineData(): PipelineDataState {
       }
     }
 
-    // Throttle: only refetch when playing or on manual jump (not every frame)
-    // quantized to integer seconds so we only re-render at second boundaries
     load()
 
     return () => { cancelled = true }
-  }, [Math.round(elapsedSeconds)])  // quantized dependency — only triggers on integer second changes
+  }, [backendT, scenarioId])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const getRecord = useCallback(
     (nodeId: string): NodePipelineRecord | undefined => getNodeRecord(records, nodeId),

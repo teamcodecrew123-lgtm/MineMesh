@@ -1,5 +1,5 @@
-import { useSimulationStore } from '../../store/simulationStore'
-import { STAGE_DEFINITIONS, TOTAL_DURATION } from '../../data/stageDefinitions'
+import { useSimulationStore, SCENARIO_OPTIONS, ScenarioId } from '../../store/simulationStore'
+import { STAGE_DEFINITIONS, TOTAL_DURATION, getScenarioStages } from '../../data/stageDefinitions'
 
 function formatTime(s: number): string {
   const m = Math.floor(s / 60)
@@ -11,15 +11,17 @@ export function SimulationController() {
   const playing = useSimulationStore((s) => s.playing)
   const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds)
   const stageIndex = useSimulationStore((s) => s.stageIndex)
+  const scenarioId = useSimulationStore((s) => s.scenarioId)
   const start = useSimulationStore((s) => s.start)
   const pause = useSimulationStore((s) => s.pause)
   const restart = useSimulationStore((s) => s.restart)
+  const setScenario = useSimulationStore((s) => s.setScenario)
   const nextStage = useSimulationStore((s) => s.nextStage)
   const prevStage = useSimulationStore((s) => s.prevStage)
 
   const progress = (elapsedSeconds / TOTAL_DURATION) * 100
   const isFinished = elapsedSeconds >= TOTAL_DURATION
-  const currentStage = STAGE_DEFINITIONS[stageIndex]
+  const currentStage = getScenarioStages(scenarioId)[stageIndex]
 
   return (
     <div className="sim-controller" id="sim-controller">
@@ -92,6 +94,21 @@ export function SimulationController() {
         <button id="btn-restart" className="sim-btn sim-btn-danger" onClick={restart}>
           ↺ RESTART
         </button>
+      </div>
+
+      {/* ── Scenario Selector Row ── */}
+      <div className="sim-scenario-row glass-panel">
+        <span className="sim-scenario-label">SCENARIO</span>
+        {SCENARIO_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            className={`sim-btn sim-btn-secondary sim-scenario-btn${scenarioId === opt.id ? ' sim-scenario-btn-active' : ''}`}
+            onClick={() => setScenario(opt.id as ScenarioId)}
+            title={opt.id}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
     </div>
   )

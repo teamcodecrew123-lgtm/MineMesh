@@ -4,7 +4,6 @@ import { useFrame, ThreeEvent } from '@react-three/fiber'
 import { Billboard, Text } from '@react-three/drei'
 import { useSimulationStore } from '../../store/simulationStore'
 import {
-  MONITORING_NODES,
   GNSS_STATIONS,
   getNodeReadings,
   getGNSSReadings,
@@ -24,12 +23,13 @@ export function Sensors() {
   const selectedGNSSId = useSimulationStore((s) => s.selectedGNSSId)
   const openNodePanel = useSimulationStore((s) => s.openNodePanel)
   const openGNSSPanel = useSimulationStore((s) => s.openGNSSPanel)
+  const heroNodes = useSimulationStore((s) => s.heroNodes)
 
   return (
     <group>
       {/* ── 1. Underground Monitoring Nodes with Smooth Continuous Gradient Heatmaps ── */}
       {layers.nodes &&
-        MONITORING_NODES.map((node) => {
+        heroNodes.map((node) => {
           const nodeReadings = getNodeReadings(node, readings)
           const isSelected = selectedNodeId === node.id
 

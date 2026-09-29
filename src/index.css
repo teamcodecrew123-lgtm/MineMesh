@@ -631,6 +631,32 @@ html, body, #root {
   background: rgba(220, 38, 38, 0.15);
 }
 
+/* ── Scenario selector row ── */
+.sim-scenario-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.sim-scenario-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.sim-scenario-btn {
+  flex: 1;
+}
+.sim-scenario-btn-active {
+  background: rgba(14, 165, 233, 0.18);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.45);
+}
+
 .sim-clock {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12.5px;
