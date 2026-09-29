@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MineScene } from './components/scene/MineScene'
 import { SimulationController } from './components/ui/SimulationController'
-import { AlertBanner } from './components/ui/AlertBanner'
 import { SensorInfoPanel } from './components/ui/SensorInfoPanel'
 import { GNSSInfoPanel } from './components/ui/GNSSInfoPanel'
 import { TimeSeriesGraphModal } from './components/ui/TimeSeriesGraphModal'
@@ -60,16 +59,9 @@ function App() {
         <div className="header-logo">
           <div className="header-logo-icon">M</div>
           <div className="header-title-group">
-            <span className="header-logo-text">MineGuard</span>
-            <span className="header-logo-sub">3D Mine Subsidence Digital Twin</span>
+            <span className="header-logo-text">MineMesh</span>
+            <span className="header-logo-sub">3D Mine Subsidence Monitoring</span>
           </div>
-        </div>
-
-        <div className="header-divider" />
-
-        {/* Center: System Architecture Tag */}
-        <div className="header-system-tag">
-          5 Underground Nodes · 4 Surface GNSS · InSAR
         </div>
 
         <div className="header-divider" />
@@ -92,9 +84,6 @@ function App() {
           </span>
         </div>
       </header>
-
-      {/* ── Top-Center Stage Alert Banner ── */}
-      <AlertBanner />
 
       {/* ── Top-Left: Display Layers (Closable) ── */}
       <LayerControls isOpen={layersOpen} onClose={() => setLayersOpen(false)} />

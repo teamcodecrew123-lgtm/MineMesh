@@ -936,7 +936,7 @@ html, body, #root {
    ═══════════════════════════════════════════════════════════════════ */
 .ml-pipeline-panel {
   position: absolute;
-  bottom: 100px;
+  bottom: 175px;
   right: 14px;
   z-index: 90;
   width: 310px;

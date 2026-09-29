@@ -144,9 +144,9 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     miningFront: true,
     nodes: true,
     gnss: true,
-    insar: true,
-    seismic: true,
-    deformation: true,
+    insar: false,
+    seismic: false,
+    deformation: false,
     surfaceStructures: true,
   },
 

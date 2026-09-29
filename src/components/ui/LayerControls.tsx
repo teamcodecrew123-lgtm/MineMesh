@@ -14,9 +14,6 @@ const LAYERS: LayerConfig[] = [
   { key: 'miningFront', label: 'Mining Shearer', color: '#d97706' },
   { key: 'nodes', label: 'Monitoring Nodes', color: '#3b82f6' },
   { key: 'gnss', label: 'GNSS', color: '#0284c7' },
-  { key: 'insar', label: 'InSAR', color: '#06b6d4' },
-  { key: 'seismic', label: 'Microseismic', color: '#f97316' },
-  { key: 'deformation', label: 'Deformation', color: '#ef4444' },
 ]
 
 interface LayerControlsProps {

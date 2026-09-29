@@ -1,5 +1,5 @@
 import { useSimulationStore, SCENARIO_OPTIONS, ScenarioId } from '../../store/simulationStore'
-import { STAGE_DEFINITIONS, TOTAL_DURATION, getScenarioStages } from '../../data/stageDefinitions'
+import { STAGE_DEFINITIONS, TOTAL_DURATION } from '../../data/stageDefinitions'
 
 function formatTime(s: number): string {
   const m = Math.floor(s / 60)
@@ -10,8 +10,8 @@ function formatTime(s: number): string {
 export function SimulationController() {
   const playing = useSimulationStore((s) => s.playing)
   const elapsedSeconds = useSimulationStore((s) => s.elapsedSeconds)
-  const stageIndex = useSimulationStore((s) => s.stageIndex)
   const scenarioId = useSimulationStore((s) => s.scenarioId)
+  const stageIndex = useSimulationStore((s) => s.stageIndex)
   const start = useSimulationStore((s) => s.start)
   const pause = useSimulationStore((s) => s.pause)
   const restart = useSimulationStore((s) => s.restart)
@@ -19,27 +19,10 @@ export function SimulationController() {
   const nextStage = useSimulationStore((s) => s.nextStage)
   const prevStage = useSimulationStore((s) => s.prevStage)
 
-  const progress = (elapsedSeconds / TOTAL_DURATION) * 100
   const isFinished = elapsedSeconds >= TOTAL_DURATION
-  const currentStage = getScenarioStages(scenarioId)[stageIndex]
 
   return (
     <div className="sim-controller" id="sim-controller">
-      {/* ── Active Stage Header ── */}
-      <div className="glass-panel sim-stage-info" style={{ width: '100%' }}>
-        <span className="sim-stage-badge">
-          STAGE {stageIndex + 1} / {STAGE_DEFINITIONS.length}
-        </span>
-        <span className="sim-stage-name">{currentStage.name}</span>
-        <div style={{ flex: 1 }} />
-        <div className="sim-progress-track" style={{ width: 120 }}>
-          <div
-            className="sim-progress-fill"
-            style={{ width: `${Math.min(progress, 100).toFixed(1)}%` }}
-          />
-        </div>
-      </div>
-
       {/* ── Controls Row ── */}
       <div className="sim-controls-row glass-panel">
         {/* Playback Clock */}
