@@ -1290,3 +1290,104 @@ html, body, #root {
   line-height: 1.4;
 }
 
+/* ── Fusion gate: scrollable rows ──────────────────────────────── */
+.fusion-gate-rows {
+  max-height: calc(100vh - 380px);
+  overflow-y: auto;
+  /* Subtle scrollbar matching the existing UI style */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.16) transparent;
+}
+.fusion-gate-rows::-webkit-scrollbar {
+  width: 4px;
+}
+.fusion-gate-rows::-webkit-scrollbar-track {
+  background: transparent;
+}
+.fusion-gate-rows::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.16);
+  border-radius: 2px;
+}
+
+/* ── Fusion gate: collapse / expand button ─────────────────────── */
+.fusion-gate-collapse-btn {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-left: 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.04);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  padding: 0;
+}
+.fusion-gate-collapse-btn:hover,
+.fusion-gate-collapse-btn:focus-visible {
+  background: rgba(0,0,0,0.10);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+/* ── Fusion gate: panel exit animation ─────────────────────────── */
+@keyframes slideOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-18px); }
+}
+.fusion-gate-panel--collapsing {
+  animation: slideOutLeft 0.22s ease forwards;
+  pointer-events: none;
+}
+
+/* ── Fusion gate: collapsed vertical tab ──────────────────────── */
+.fusion-gate-tab {
+  position: absolute;
+  bottom: 100px;
+  left: 14px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 28px;
+  padding: 10px 0;
+  background: var(--color-surface);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  animation: slideInLeft 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fusion-gate-tab:hover,
+.fusion-gate-tab:focus-visible {
+  background: white;
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+.fusion-gate-tab-chevron {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-brand);
+  line-height: 1;
+}
+.fusion-gate-tab-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: var(--color-text-muted);
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+}
+

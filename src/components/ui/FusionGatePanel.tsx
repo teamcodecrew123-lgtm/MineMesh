@@ -2,25 +2,13 @@
  * FusionGatePanel — Fusion AND-Gate Narrative Display
  * ─────────────────────────────────────────────────────────────────────
  * Shows the real-time status of the rule-based fusion AND-gate for all
- * 5 monitoring nodes. This is the most narratively important part of
- * the pipeline — it shows how the system distinguishes real anomalies
- * from sensor noise/faults.
- *
- * Replaces/augments the generic SensorFusionPanel with data-faithful
- * per-gate status derived from the mock (or future live) pipeline.
+ * monitoring nodes. Collapsible with a narrow tab toggle.
  */
 
+import { useState } from 'react'
 import { useSimulationStore } from '../../store/simulationStore'
 import { usePipelineData } from '../../hooks/usePipelineData'
 import { NodePipelineRecord } from '../../types/pipeline'
-
-const NODE_LABELS: Record<string, string> = {
-  'node-01': 'NODE-01\nMain Haulage',
-  'node-02': 'NODE-02\nNorth Gate Face',
-  'node-03': 'NODE-03\nPanel Crosscut',
-  'node-04': 'NODE-04\nSouth Tail Gate',
-  'node-05': 'NODE-05\nShaft Station',
-}
 
 const NODE_SHORT: Record<string, string> = {
   'node-01': 'N-01',
@@ -28,6 +16,10 @@ const NODE_SHORT: Record<string, string> = {
   'node-03': 'N-03',
   'node-04': 'N-04',
   'node-05': 'N-05',
+}
+
+function nodeShortLabel(id: string): string {
+  return NODE_SHORT[id] ?? id.slice(0, 6).toUpperCase()
 }
 
 function gateIcon(pass: boolean) {
@@ -47,7 +39,6 @@ function NodeFusionRow({ rec }: { rec: NodePipelineRecord }) {
   const if_flagged = rec.isolation_forest.if_flagged
   const nodeId = rec.node_id
 
-  // Background intensity based on agreement score
   const bgAlpha = f.fusion_agreement_score * 0.18
   const rowBg = f.fusion_flag
     ? `rgba(220,38,38,${bgAlpha + 0.04})`
@@ -56,43 +47,29 @@ function NodeFusionRow({ rec }: { rec: NodePipelineRecord }) {
     : 'transparent'
 
   return (
-    <div
-      className="fusion-gate-row"
-      style={{ background: rowBg }}
-    >
-      {/* Node label */}
-      <div className="fusion-gate-node-label">
-        {NODE_SHORT[nodeId]}
-      </div>
+    <div className="fusion-gate-row" style={{ background: rowBg }}>
+      <div className="fusion-gate-node-label">{nodeShortLabel(nodeId)}</div>
 
-      {/* IF flagged indicator */}
       <div className="fusion-gate-cell" title="Isolation Forest flagged this node">
         {if_flagged
           ? <span style={{ color: '#f59e0b', fontSize: 9, fontWeight: 700 }}>⚠ IF</span>
           : <span style={{ color: '#475569', fontSize: 9 }}>—</span>}
       </div>
 
-      {/* Gate 1: Persistence */}
       <div className="fusion-gate-cell" title="Persistence: repeated anomaly across timesteps">
         {gateIcon(f.persistence_check)}
       </div>
-
-      {/* Gate 2: Neighbor */}
       <div className="fusion-gate-cell" title="Neighbor agreement: spatially adjacent nodes agree">
         {gateIcon(f.neighbor_agreement)}
       </div>
-
-      {/* Gate 3: Sensor-type */}
       <div className="fusion-gate-cell" title="Sensor-type: vibration/piezo corroborates GNSS anomaly">
         {gateIcon(f.sensor_type_agreement)}
       </div>
 
-      {/* Agreement score */}
       <div className="fusion-gate-cell" style={{ color: '#0ea5e9', fontFamily: 'monospace', fontSize: 10 }}>
         {(f.fusion_agreement_score * 100).toFixed(0)}%
       </div>
 
-      {/* Final gate flag */}
       <div className="fusion-gate-cell fusion-gate-flag-cell">
         {flagIcon(f.fusion_flag)}
       </div>
@@ -100,7 +77,6 @@ function NodeFusionRow({ rec }: { rec: NodePipelineRecord }) {
   )
 }
 
-// ── Gate explanation sidebar ────────────────────────────────────────
 const GATE_EXPLANATIONS = [
   {
     icon: '🔁',
@@ -122,18 +98,50 @@ const GATE_EXPLANATIONS = [
 export function FusionGatePanel() {
   const stageIndex = useSimulationStore((s) => s.stageIndex)
   const { records, loading } = usePipelineData()
+  const [collapsed, setCollapsed] = useState(false)
+  const [collapsing, setCollapsing] = useState(false)
 
-  // Only show this panel from stage 2 onwards (when fusion becomes relevant)
-  // (or always if you prefer — kept optional here for narrative clarity)
   if (stageIndex < 2 || loading || records.length === 0) return null
 
-  // Count confirmed nodes
   const confirmedCount = records.filter((r) => r.fusion.fusion_flag).length
-  const flaggedCount = records.filter((r) => r.isolation_forest.if_flagged).length
+  const flaggedCount   = records.filter((r) => r.isolation_forest.if_flagged).length
 
+  const handleCollapse = () => {
+    setCollapsing(true)
+    setTimeout(() => {
+      setCollapsed(true)
+      setCollapsing(false)
+    }, 220)
+  }
+
+  const handleExpand = () => {
+    setCollapsed(false)
+  }
+
+  // ── Collapsed: thin vertical tab ─────────────────────────────────
+  if (collapsed) {
+    return (
+      <button
+        className="fusion-gate-tab"
+        onClick={handleExpand}
+        aria-label="Expand sensor fusion panel"
+        title="Expand fusion gate panel"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleExpand() }
+        }}
+      >
+        <span className="fusion-gate-tab-chevron" aria-hidden="true">›</span>
+        <span className="fusion-gate-tab-label">FUSION</span>
+      </button>
+    )
+  }
+
+  // ── Expanded ──────────────────────────────────────────────────────
   return (
-    <div className="glass-panel fusion-gate-panel" id="fusion-gate-panel">
-
+    <div
+      className={`glass-panel fusion-gate-panel${collapsing ? ' fusion-gate-panel--collapsing' : ''}`}
+      id="fusion-gate-panel"
+    >
       {/* ── Header ── */}
       <div className="fusion-gate-header">
         <span className="fusion-gate-title">🔀 FUSION AND-GATE STATUS</span>
@@ -144,9 +152,20 @@ export function FusionGatePanel() {
             {confirmedCount} confirmed
           </span>
         </div>
+        <button
+          className="fusion-gate-collapse-btn"
+          onClick={handleCollapse}
+          aria-label="Collapse sensor fusion panel"
+          title="Collapse"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCollapse() }
+          }}
+        >
+          ‹
+        </button>
       </div>
 
-      {/* ── Explanation: The AND-gate rule ── */}
+      {/* ── Rule explanation box ── */}
       <div className="fusion-gate-rule-box">
         <div className="fusion-gate-rule-title">System rule: anomaly confirmed only when ALL 3 gates agree</div>
         <div style={{ fontSize: 9, color: '#64748b', marginTop: 2 }}>
@@ -158,15 +177,15 @@ export function FusionGatePanel() {
       <div className="fusion-gate-table-header">
         <div className="fusion-gate-node-label" style={{ color: '#64748b' }}>NODE</div>
         <div className="fusion-gate-cell" style={{ color: '#f59e0b', fontSize: 9 }}>IF</div>
-        <div className="fusion-gate-cell" title="Gate 1 — Persistence" style={{ color: '#64748b', fontSize: 9 }}>P</div>
-        <div className="fusion-gate-cell" title="Gate 2 — Neighbor"    style={{ color: '#64748b', fontSize: 9 }}>N</div>
-        <div className="fusion-gate-cell" title="Gate 3 — Sensor-Type" style={{ color: '#64748b', fontSize: 9 }}>S</div>
-        <div className="fusion-gate-cell" style={{ color: '#0ea5e9',   fontSize: 9 }}>AGR%</div>
+        <div className="fusion-gate-cell" title="Gate 1 — Persistence"  style={{ color: '#64748b', fontSize: 9 }}>P</div>
+        <div className="fusion-gate-cell" title="Gate 2 — Neighbor"     style={{ color: '#64748b', fontSize: 9 }}>N</div>
+        <div className="fusion-gate-cell" title="Gate 3 — Sensor-Type"  style={{ color: '#64748b', fontSize: 9 }}>S</div>
+        <div className="fusion-gate-cell" style={{ color: '#0ea5e9', fontSize: 9 }}>AGR%</div>
         <div className="fusion-gate-cell fusion-gate-flag-cell" style={{ color: '#64748b', fontSize: 9 }}>GATE</div>
       </div>
 
-      {/* ── Rows ── */}
-      <div className="fusion-gate-rows">
+      {/* ── Scrollable node rows ── */}
+      <div className="fusion-gate-rows" role="list" aria-label="Node fusion gate status">
         {records.map((rec) => (
           <NodeFusionRow key={rec.node_id} rec={rec} />
         ))}
